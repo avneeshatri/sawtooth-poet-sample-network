@@ -1,0 +1,208 @@
+# Copyright 2018 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ------------------------------------------------------------------------------
+
+version: '2.1'
+
+volumes:
+  node-a-validator:
+  node-b-validator:
+  node-c-validator:
+  node-d-validator:
+
+networks:
+  poet-sawtooth:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16
+         gateway: 10.5.0.1
+
+services:
+
+
+  node-a-validator:
+    container_name: node-a-validator
+    hostname: node-a-validator
+    image: ubuntu:bionic
+    expose:
+      - 4004
+    ports:
+      - '11004:4004'
+    networks:
+      poet-sawtooth:
+        ipv4_address: 10.5.0.2
+    working_dir: /app
+    volumes:
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-a/validator/keys/validator/:/etc/sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-a/validator/keys/user/:/root/.sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/bin:/app/bin/
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-a/validator/conf/validator.toml:/etc/sawtooth/validator.toml
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-a/validator/conf/cli.toml:/etc/sawtooth/cli.toml
+    command: |
+      bash -c "
+        if [ ! -f /etc/sawtooth/keys/validator.priv ]; then
+           sawadm keygen &&
+           sawtooth keygen my_key
+        fi;
+        apt-get update
+        apt install -y software-properties-common
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+        add-apt-repository 'deb [arch=amd64] http://repo.sawtooth.me/ubuntu/chime/stable bionic universe'
+        apt-get install -y sawtooth
+        apt-get install vim -y
+        apt-get install telnet -y
+        apt-get install net-tools
+        apt-get install -y python3-sawtooth-poet-cli
+        apt-get install -y python3-sawtooth-poet-engine
+        apt-get install -y python3-sawtooth-poet-families
+        apt-get install -y sawtooth-devmode-engine-rust
+        apt-get install curl -y
+        apt install iputils-ping -y
+        /app/bin/genesis.sh
+        /app/bin/services.sh 10.5.0.2 10.5.0.2
+        tail -F anything
+      "
+
+  node-b-validator:
+    container_name: node-b-validator
+    hostname: node-b-validator
+    image: ubuntu:bionic
+    expose:
+      - 4004
+    ports:
+      - '12004:4004'
+    networks:
+      poet-sawtooth:
+        ipv4_address: 10.5.0.3
+    working_dir: /app
+    depends_on:
+      - node-a-validator
+    volumes:
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-b/validator/keys/validator/:/etc/sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-b/validator/keys/user/:/root/.sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/bin:/app/bin/
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-b/validator/conf/validator.toml:/etc/sawtooth/validator.toml
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-b/validator/conf/cli.toml:/etc/sawtooth/cli.toml
+    command: |
+      bash -c "
+        if [ ! -f /etc/sawtooth/keys/validator.priv ]; then
+           sawadm keygen &&
+           sawtooth keygen my_key
+        fi;
+        apt-get update
+        apt install -y software-properties-common
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+        add-apt-repository 'deb [arch=amd64] http://repo.sawtooth.me/ubuntu/chime/stable bionic universe'
+        apt-get install -y sawtooth
+        apt-get install vim -y
+        apt-get install telnet -y
+        apt-get install net-tools
+        apt-get install -y python3-sawtooth-poet-cli
+        apt-get install -y python3-sawtooth-poet-engine
+        apt-get install -y python3-sawtooth-poet-families
+        apt-get install -y sawtooth-devmode-engine-rust
+        apt-get install curl -y
+        apt install iputils-ping -y
+        /app/bin/services.sh 10.5.0.3 10.5.0.2
+        tail -F anything
+      "
+
+  node-c-validator:
+    container_name: node-c-validator
+    hostname: node-c-validator
+    image: ubuntu:bionic
+    expose:
+      - 4004
+    ports:
+      - '13004:4004'
+    networks:
+      poet-sawtooth:
+        ipv4_address: 10.5.0.4
+    working_dir: /app
+    depends_on:
+      - node-a-validator
+    volumes:
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-c/validator/keys/validator/:/etc/sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-c/validator/keys/user/:/root/.sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/bin:/app/bin/
+ #       - /home/atri/workspace_sawtooth/poet-sample-network/node-c/validator/conf/validator.toml:/etc/sawtooth/validator.toml
+ #       - /home/atri/workspace_sawtooth/poet-sample-network/node-c/validator/conf/cli.toml:/etc/sawtooth/cli.toml
+    command: |
+      bash -c "
+        if [ ! -f /etc/sawtooth/keys/validator.priv ]; then
+           sawadm keygen &&
+           sawtooth keygen my_key
+        fi;
+        apt-get update
+        apt install -y software-properties-common
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+        add-apt-repository 'deb [arch=amd64] http://repo.sawtooth.me/ubuntu/chime/stable bionic universe'
+        apt-get install -y sawtooth
+        apt-get install vim -y
+        apt-get install telnet -y
+        apt-get install net-tools
+        apt-get install -y python3-sawtooth-poet-cli
+        apt-get install -y python3-sawtooth-poet-engine
+        apt-get install -y python3-sawtooth-poet-families
+        apt-get install -y sawtooth-devmode-engine-rust
+        apt-get install curl -y
+        apt install iputils-ping -y
+        /app/bin/services.sh 10.5.0.4 10.5.0.2
+        tail -F anything
+      "
+
+  node-d-validator:
+    container_name: node-d-validator
+    hostname: node-d-validator
+    image: ubuntu:bionic
+    expose:
+      - 4004
+    ports:
+      - '14004:4004'
+    networks:
+      poet-sawtooth:
+        ipv4_address: 10.5.0.5
+    working_dir: /app
+    depends_on:
+      - node-a-validator
+    volumes:
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-d/validator/keys/validator/:/etc/sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/node-d/validator/keys/user/:/root/.sawtooth/keys/
+        - /home/atri/workspace_sawtooth/poet-sample-network/bin:/app/bin/
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-d/validator/conf/validator.toml:/etc/sawtooth/validator.toml
+#        - /home/atri/workspace_sawtooth/poet-sample-network/node-d/validator/conf/cli.toml:/etc/sawtooth/cli.toml
+    command: |
+      bash -c "
+        if [ ! -f /etc/sawtooth/keys/validator.priv ]; then
+           sawadm keygen &&
+           sawtooth keygen my_key
+        fi;
+        apt-get update
+        apt install -y software-properties-common
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+        add-apt-repository 'deb [arch=amd64] http://repo.sawtooth.me/ubuntu/chime/stable bionic universe'
+        apt-get install -y sawtooth
+        apt-get install vim -y
+        apt-get install telnet -y
+        apt-get install net-tools
+        apt-get install -y python3-sawtooth-poet-cli
+        apt-get install -y python3-sawtooth-poet-engine
+        apt-get install -y python3-sawtooth-poet-families
+        apt-get install -y sawtooth-devmode-engine-rust
+        apt-get install curl -y
+        apt install iputils-ping -y
+        /app/bin/services.sh 10.5.0.5 10.5.0.2
+        tail -F anything
+      "
